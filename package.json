@@ -1,0 +1,17 @@
+{
+  "name": "madrasti-platform",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend && npm run build --workspace backend",
+    "start": "npm run start --workspace backend"
+  },
+  "overrides": {
+    "lru-cache": "^6.0.0"
+  }
+}
