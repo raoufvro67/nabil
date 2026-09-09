@@ -1,23 +1,21 @@
 import { Link, Routes, Route, useNavigate, NavLink } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Admin from './pages/Admin';
 import CoursePage from './pages/CoursePage';
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
 import LevelPage from './pages/LevelPage';
 import ContactPage from './pages/ContactPage';
+import MathCanvas from './components/MathCanvas';
 import { useLang } from './LanguageContext';
 import { useUser } from './UserContext';
+import { useTheme } from './ThemeContext';
 
 interface Course {
-  id: string;
-  title: string;
-  level: string;
-  type: string;
-  trimestre?: string;
-  teacher?: string;
-  videoUrl?: string | null;
-  pdfUrl?: string | null;
+  id: string; title: string; level: string; type: string;
+  trimestre?: string; teacher?: string; videoUrl?: string | null; pdfUrl?: string | null;
 }
 
 const FALLBACK: Course[] = [
@@ -32,10 +30,60 @@ const FALLBACK: Course[] = [
   { id:'c9', title:'Méthodologie de la dissertation',        level:'term', type:'free',    trimestre:'T1', teacher:'Prof. Nabil' },
 ];
 
+/* ── Animated counter hook ── */
+function useCountUp(target: string, inView: boolean) {
+  const [val, setVal] = useState('0');
+  useEffect(() => {
+    if (!inView) return;
+    const num = parseInt(target.replace(/\D/g, ''), 10);
+    const prefix = target.match(/^\+/) ? '+' : '';
+    const suffix = target.match(/\s+(.+)$/) ? '' : '';
+    if (isNaN(num)) { setVal(target); return; }
+    let start = 0;
+    const step = Math.ceil(num / 40);
+    const id = setInterval(() => {
+      start = Math.min(start + step, num);
+      setVal(`${prefix}${start.toLocaleString('fr-DZ')}${suffix}`);
+      if (start >= num) clearInterval(id);
+    }, 30);
+    return () => clearInterval(id);
+  }, [inView, target]);
+  return val;
+}
+
+/* ── Stat item ── */
+function StatItem({ num, label, inView }: { num: string; label: string; inView: boolean }) {
+  const val = useCountUp(num, inView);
+  return (
+    <div className="stat">
+      <span className="snum">{val}</span>
+      <span className="slbl">{label}</span>
+    </div>
+  );
+}
+
+/* ── Scroll reveal hook ── */
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return { ref, inView };
+}
+
 /* ── Header ── */
 function Header() {
   const { lang, setLang, t } = useLang();
   const { user, logout } = useUser();
+  const { theme, toggleTheme } = useTheme();
   return (
     <header className="topbar">
       <div className="wrap header-inner">
@@ -48,18 +96,30 @@ function Header() {
           <NavLink to="/contact">{t.nav.contact}</NavLink>
           <NavLink to="/admin">{t.nav.admin}</NavLink>
         </nav>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          {/* Theme toggle */}
+          <button
+            className="btn-theme"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+            aria-label="Changer le thème"
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
+          {/* Language toggle */}
           <button className="btn-lang" onClick={() => setLang(lang === 'fr' ? 'ar' : 'fr')}>
             {lang === 'fr' ? 'عربي' : 'FR'}
           </button>
           {user ? (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <Link to="/profile" style={{ textDecoration: 'none' }}>
-                <button className="btn-login" style={{ borderColor: 'var(--teal)', color: 'var(--teal)' }}>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <Link to="/profile">
+                <button className="btn-login" style={{ borderColor:'var(--teal)', color:'var(--teal)' }}>
                   {user.name.split(' ')[0]}
                 </button>
               </Link>
-              <button className="btn-login" onClick={logout}>{lang === 'fr' ? 'Déco.' : 'خروج'}</button>
+              <button className="btn-login" onClick={logout}>
+                {lang === 'fr' ? 'Déco.' : 'خروج'}
+              </button>
             </div>
           ) : (
             <Link to="/login"><button className="btn-login">{t.nav.login}</button></Link>
@@ -73,13 +133,16 @@ function Header() {
 /* ── Hero ── */
 function HeroSection() {
   const { t } = useLang();
+  const { ref, inView } = useReveal();
   return (
     <section className="hero">
       <div className="hero-glow" />
-      <div className="wrap">
+      <div className="hero-glow-2" />
+      <div className="wrap" ref={ref}>
         <div className="eyebrow">{t.hero.eyebrow}</div>
         <h1 className="htitle">
-          {t.hero.titlePre} <span className="hl">{t.hero.titleHL}</span><br />{t.hero.titlePost}
+          {t.hero.titlePre} <span className="hl">{t.hero.titleHL}</span>
+          <br />{t.hero.titlePost}
         </h1>
         <p className="hsub">{t.hero.sub}</p>
         <div className="hctas">
@@ -88,10 +151,7 @@ function HeroSection() {
         </div>
         <div className="sbar">
           {t.hero.stats.map(s => (
-            <div className="stat" key={s.label}>
-              <span className="snum">{s.num}</span>
-              <span className="slbl">{s.label}</span>
-            </div>
+            <StatItem key={s.label} num={s.num} label={s.label} inView={inView} />
           ))}
         </div>
       </div>
@@ -124,30 +184,45 @@ function PromoVideo() {
   );
 }
 
-/* ── Catalogue (level cards on home) ── */
+/* ── Catalogue — level cards grid ── */
+const LEVEL_COLORS = ['#3DBFA0', '#6B7FE8', '#E8A23D'];
+
 function CatalogSection({ courses }: { courses: Course[] }) {
   const { t } = useLang();
   const navigate = useNavigate();
+  const { ref, inView } = useReveal();
   const countFor = (id: string) => courses.filter(c => c.level === id).length;
-
-  const LEVEL_COLORS = ['#3E6B57', '#2E6B8A', '#6B4A8A'];
 
   return (
     <section id="catalogue" className="lsec">
       <div className="wrap">
-        <p className="slabel">{t.catalog.sectionLabel}</p>
+        <div className="lsec-head reveal" ref={ref} style={inView ? { opacity:1, transform:'none' } : {}}>
+          <span className="badge-tag">{t.catalog.sectionLabel}</span>
+          <h2>{t.catalog.sectionLabel}</h2>
+          <p>
+            {t.catalog.trimesters.map(tr => tr.label).join(' · ')}
+          </p>
+        </div>
+
         <div className="level-cards">
           {t.levels.map((l, i) => (
             <div
               key={l.id}
-              className="level-card"
-              style={{ '--lc': LEVEL_COLORS[i] } as React.CSSProperties}
+              className="level-card reveal"
+              style={Object.assign(
+                { '--lc': LEVEL_COLORS[i] } as React.CSSProperties,
+                inView
+                  ? { opacity:1, transform:'none', transitionDelay:`${i * 0.1}s` }
+                  : { transitionDelay:`${i * 0.1}s` }
+              )}
               onClick={() => navigate(`/niveau/${l.id}`)}
             >
               <span className="level-card-num">{l.num}</span>
               <div className="level-card-body">
                 <h3 className="level-card-title">{l.label}</h3>
-                <p className="level-card-count">{countFor(l.id)} {t.catalog.coursesUnit}</p>
+                <p className="level-card-count">
+                  {countFor(l.id)} {t.catalog.coursesUnit}
+                </p>
                 <p className="level-card-sub">
                   {t.catalog.trimesters.map(tr => tr.label).join(' · ')}
                 </p>
@@ -165,6 +240,7 @@ function CatalogSection({ courses }: { courses: Course[] }) {
 function PricingSection() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const { ref, inView } = useReveal();
   return (
     <section id="tarifs" className="pricing">
       <div className="wrap">
@@ -173,9 +249,15 @@ function PricingSection() {
           <h2>{t.pricing.title}</h2>
           <p>{t.pricing.sub}</p>
         </div>
-        <div className="pgrid pgrid-3">
-          {t.pricing.plans.map(plan => (
-            <div key={plan.key} className={`plan${plan.highlight ? ' hi' : ''}`}>
+        <div className="pgrid pgrid-3" ref={ref}>
+          {t.pricing.plans.map((plan, i) => (
+            <div
+              key={plan.key}
+              className={`plan reveal${plan.highlight ? ' hi' : ''}`}
+              style={inView
+                ? { opacity:1, transform:'none', transitionDelay:`${i * 0.12}s` } as React.CSSProperties
+                : { transitionDelay:`${i * 0.12}s` } as React.CSSProperties}
+            >
               {plan.highlight && <div className="pbadge">{t.pricing.recommended}</div>}
               <p className="pname">{plan.name}</p>
               <p className="pprice"><span dir="ltr">{plan.price}</span> <small>{plan.period}</small></p>
@@ -188,8 +270,8 @@ function PricingSection() {
               </ul>
               <button
                 className={plan.highlight ? 'btn-p' : 'btn-o'}
-                style={{ width: '100%' }}
-                onClick={() => navigate('/login', { state: { plan: plan.key } })}
+                style={{ width:'100%' }}
+                onClick={() => navigate('/login', { state:{ plan: plan.key } })}
               >
                 {plan.cta}
               </button>
@@ -229,7 +311,6 @@ function Footer() {
               <li><Link to="/contact">{t.nav.contact}</Link></li>
               <li><a href="mailto:contact@madrasti.dz">contact@madrasti.dz</a></li>
               <li><a href="tel:+213555123456">+213 555 123 456</a></li>
-              <li><a href="#">Alger, Algérie</a></li>
             </ul>
           </div>
         </div>
@@ -265,7 +346,7 @@ function Home() {
 /* ── Admin wrapper ── */
 function AdminShell() {
   return (
-    <div className="wrap">
+    <div className="wrap" style={{ position:'relative', zIndex:1 }}>
       <div className="admin-hero">
         <span className="badge-tag">Admin</span>
         <h1>Gestion des cours</h1>
@@ -274,15 +355,15 @@ function AdminShell() {
       <div className="admin-shell">
         <Admin />
         <div className="cfcard">
-          <h4 style={{ fontWeight: 800, marginBottom: 12 }}>Conseils</h4>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <h4 style={{ fontWeight:800, marginBottom:12 }}>Conseils</h4>
+          <ul style={{ listStyle:'none', display:'flex', flexDirection:'column', gap:10 }}>
             {[
               'Uploadez une vidéo (max 500 Mo) ou collez une URL directe.',
               'Les PDFs sont visibles uniquement dans la page du cours.',
               "Les cours premium déclenchent une modal d'abonnement.",
             ].map(tip => (
-              <li key={tip} style={{ fontSize: '.82rem', color: 'var(--chalk-dim)', display: 'flex', gap: 8 }}>
-                <span style={{ color: 'var(--teal)', flexShrink: 0 }}>✓</span>
+              <li key={tip} style={{ fontSize:'.82rem', color:'var(--chalk-dim)', display:'flex', gap:8 }}>
+                <span style={{ color:'var(--teal)', flexShrink:0 }}>✓</span>
                 <span>{tip}</span>
               </li>
             ))}
@@ -297,16 +378,19 @@ function AdminShell() {
 export default function App() {
   return (
     <div>
+      <MathCanvas />
       <Header />
-      <main>
+      <main style={{ position:'relative', zIndex:1 }}>
         <Routes>
-          <Route path="/"            element={<Home />} />
-          <Route path="/courses/:id" element={<CoursePage />} />
-          <Route path="/admin"       element={<AdminShell />} />
-          <Route path="/login"       element={<LoginPage />} />
-          <Route path="/profile"     element={<ProfilePage />} />
-          <Route path="/niveau/:level" element={<LevelPage />} />
-          <Route path="/contact"       element={<ContactPage />} />
+          <Route path="/"               element={<Home />} />
+          <Route path="/courses/:id"    element={<CoursePage />} />
+          <Route path="/admin"          element={<AdminShell />} />
+          <Route path="/login"          element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password"  element={<ResetPasswordPage />} />
+          <Route path="/profile"        element={<ProfilePage />} />
+          <Route path="/niveau/:level"  element={<LevelPage />} />
+          <Route path="/contact"        element={<ContactPage />} />
         </Routes>
       </main>
     </div>
