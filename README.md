@@ -34,3 +34,5 @@ Architecture de base pour une vraie application de cours en ligne avec :
 - Les vidéos ne doivent pas être téléchargées directement depuis la page publique
 - L’admin publie les ressources depuis un espace dédié
 - Les permissions doivent être vérifiées côté serveur
+## visiter le site
+https://nabil-frontend.vercel.app/

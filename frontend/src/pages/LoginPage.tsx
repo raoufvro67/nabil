@@ -37,7 +37,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLloading(true); setLmsg('');
     try {
-      const res = await fetch('http://localhost:3000/auth/student-login', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/student-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: lemail, password: lpassword }),
@@ -58,7 +58,7 @@ export default function LoginPage() {
     if (rpassword !== rconfirm) { setRmsg(a.passwordMismatch); return; }
     setRloading(true); setRmsg('');
     try {
-      const res = await fetch('http://localhost:3000/auth/register', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

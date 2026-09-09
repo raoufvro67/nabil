@@ -114,7 +114,7 @@ export default function CoursePage() {
 
   useEffect(() => {
     if (!course && id) {
-      fetch(`http://localhost:3000/courses/detail/${id}`)
+      fetch(`${import.meta.env.VITE_API_URL}/courses/detail/${id}`)
         .then(r => r.json())
         .then(data => { setCourse(data); setLoading(false); })
         .catch(() => setLoading(false));

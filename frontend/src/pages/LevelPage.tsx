@@ -98,7 +98,7 @@ export default function LevelPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch('http://localhost:3000/courses')
+    fetch(`${import.meta.env.VITE_API_URL}/courses`)
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {

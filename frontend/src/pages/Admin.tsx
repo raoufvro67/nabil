@@ -35,7 +35,7 @@ export default function Admin() {
 
   const fetchCourses = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:3000/courses');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/courses`);
       const data = await res.json();
       if (Array.isArray(data)) setCourses(data);
     } catch {}
@@ -48,7 +48,7 @@ export default function Admin() {
     e.preventDefault();
     setLoginMsg('Connexion...');
     try {
-      const res = await fetch('http://localhost:3000/auth/login', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -67,7 +67,7 @@ export default function Admin() {
   async function uploadFile(file: File, endpoint: string): Promise<string> {
     const fd = new FormData();
     fd.append('file', file);
-    const res = await fetch(`http://localhost:3000/courses/upload/${endpoint}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/upload/${endpoint}`, {
       method: 'POST', headers: authHeader, body: fd,
     });
     if (!res.ok) {
@@ -87,7 +87,7 @@ export default function Admin() {
       if (videoFile) { setMessage('Upload vidéo...'); finalVideo = await uploadFile(videoFile, 'video'); }
       if (pdfFile)   { setMessage('Upload PDF...');   finalPdf   = await uploadFile(pdfFile,   'pdf');   }
 
-      const res = await fetch('http://localhost:3000/courses', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/courses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeader },
         body: JSON.stringify({
@@ -111,7 +111,7 @@ export default function Admin() {
     if (!window.confirm(`Supprimer "${courseTitle}" ?`)) return;
     setDeleting(id);
     try {
-      const res = await fetch(`http://localhost:3000/courses/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/courses/${id}`, {
         method: 'DELETE', headers: authHeader,
       });
       if (!res.ok) throw new Error('Suppression échouée');

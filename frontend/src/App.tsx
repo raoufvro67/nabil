@@ -327,7 +327,7 @@ function Footer() {
 function Home() {
   const [courses, setCourses] = useState<Course[]>(FALLBACK);
   useEffect(() => {
-    fetch('http://localhost:3000/courses')
+    fetch(`${import.meta.env.VITE_API_URL}/courses`)
       .then(r => r.json())
       .then(data => { if (Array.isArray(data) && data.length > 0) setCourses(data); })
       .catch(() => {});
