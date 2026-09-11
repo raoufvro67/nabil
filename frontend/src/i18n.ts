@@ -19,7 +19,6 @@ export const T = {
       stats: [
         { num: '+8 000', label: 'élèves actifs' },
         { num: '+120',   label: 'cours disponibles' },
-        { num: '1',      label: 'professeur' },
         { num: '3',      label: 'niveaux scolaires' },
       ],
     },
@@ -232,7 +231,6 @@ export const T = {
       stats: [
         { num: '+8 000', label: 'طالب نشط' },
         { num: '+120',   label: 'درس متاح' },
-        { num: '1',      label: 'أستاذ' },
         { num: '3',      label: 'مستويات دراسية' },
       ],
     },
