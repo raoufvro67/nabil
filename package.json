@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "npm run dev --workspace frontend",
     "build": "npm run build --workspace frontend && npm run build --workspace backend",
+    "prisma:deploy": "npm run prisma:deploy --workspace backend",
     "start": "npm run start --workspace backend"
   },
   "overrides": {
