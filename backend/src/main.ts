@@ -21,6 +21,8 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
 
+  app.useStaticAssets(join(__dirname, '..', '..', 'frontend', 'dist'));
+
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads',
     setHeaders: (res: any, filePath: string) => {
